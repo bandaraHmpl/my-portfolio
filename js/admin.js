@@ -284,7 +284,10 @@ async function handleProjectFormSubmit(e) {
 
   const title = document.getElementById('project-title').value.trim();
   const description = document.getElementById('project-desc').value.trim();
-  const imageUrl = document.getElementById('project-img-url').value.trim();
+  const images = document.getElementById('project-images').value
+    .split('\n')
+    .map(u => u.trim())
+    .filter(Boolean);
   const technologies = document.getElementById('project-techs').value.trim();
   const github = document.getElementById('project-github').value.trim();
   const liveDemo = document.getElementById('project-demo').value.trim();
@@ -299,7 +302,7 @@ async function handleProjectFormSubmit(e) {
   submitBtn.disabled = true;
   submitBtn.textContent = 'Saving...';
 
-  const payload = { title, description, imageUrl, technologies, github, liveDemo, featured };
+  const payload = { title, description, images, technologies, github, liveDemo, featured };
 
   let res;
   if (currentEditingId) {
@@ -350,7 +353,9 @@ function openProjectModal(projectToEdit = null) {
     modalTitle.textContent = 'Edit Project';
     document.getElementById('project-title').value = projectToEdit.title || '';
     document.getElementById('project-desc').value = projectToEdit.description || '';
-    document.getElementById('project-img-url').value = projectToEdit.imageUrl || '';
+    document.getElementById('project-images').value = Array.isArray(projectToEdit.images) && projectToEdit.images.length
+      ? projectToEdit.images.join('\n')
+      : (projectToEdit.imageUrl || '');
     document.getElementById('project-techs').value = Array.isArray(projectToEdit.technologies) ? projectToEdit.technologies.join(', ') : '';
     document.getElementById('project-github').value = projectToEdit.github || '';
     document.getElementById('project-demo').value = projectToEdit.liveDemo || '';
@@ -485,7 +490,9 @@ function openAchievementModal(achievementToEdit = null) {
     document.getElementById('achievement-category').value = achievementToEdit.category || 'Other';
     document.getElementById('achievement-desc').value = achievementToEdit.description || '';
     document.getElementById('achievement-tags').value = Array.isArray(achievementToEdit.tags) ? achievementToEdit.tags.join(', ') : '';
-    document.getElementById('achievement-image').value = achievementToEdit.imageUrl || '';
+    document.getElementById('achievement-images').value = Array.isArray(achievementToEdit.images) && achievementToEdit.images.length
+      ? achievementToEdit.images.join('\n')
+      : (achievementToEdit.imageUrl || '');
     document.getElementById('achievement-featured').checked = Boolean(achievementToEdit.featured);
   } else {
     currentAchievementEditingId = null;
@@ -521,7 +528,10 @@ async function handleAchievementSubmit(e) {
   const category = document.getElementById('achievement-category').value;
   const description = document.getElementById('achievement-desc').value.trim();
   const tags = document.getElementById('achievement-tags').value.trim();
-  const imageUrl = document.getElementById('achievement-image').value.trim();
+  const images = document.getElementById('achievement-images').value
+    .split('\n')
+    .map(u => u.trim())
+    .filter(Boolean);
   const featured = document.getElementById('achievement-featured').checked;
 
   if (!title || !organization) {
@@ -533,7 +543,7 @@ async function handleAchievementSubmit(e) {
   submitBtn.disabled = true;
   submitBtn.textContent = 'Saving...';
 
-  const payload = { title, organization, year, category, description, tags, imageUrl, featured };
+  const payload = { title, organization, year, category, description, tags, images, featured };
 
   let res;
   if (currentAchievementEditingId) {

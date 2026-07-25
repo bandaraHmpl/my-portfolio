@@ -81,10 +81,16 @@ export async function getProjectById(id) {
  */
 export async function addProject(projectData) {
   try {
+    const images = Array.isArray(projectData.images)
+      ? projectData.images.map(u => (u || '').trim()).filter(Boolean)
+      : [];
+    const defaultImg = 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80';
+
     const dataToSave = {
       title: projectData.title || 'Untitled Project',
       description: projectData.description || '',
-      imageUrl: projectData.imageUrl || 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80',
+      images,
+      imageUrl: images[0] || projectData.imageUrl || defaultImg,
       technologies: Array.isArray(projectData.technologies) 
         ? projectData.technologies 
         : (projectData.technologies || '').split(',').map(t => t.trim()).filter(Boolean),
@@ -108,10 +114,16 @@ export async function addProject(projectData) {
 export async function updateProject(id, projectData) {
   try {
     const docRef = doc(db, PROJECTS_COLLECTION, id);
+    const images = Array.isArray(projectData.images)
+      ? projectData.images.map(u => (u || '').trim()).filter(Boolean)
+      : [];
+    const defaultImg = 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80';
+
     const dataToUpdate = {
       title: projectData.title,
       description: projectData.description,
-      imageUrl: projectData.imageUrl,
+      images,
+      imageUrl: images[0] || projectData.imageUrl || defaultImg,
       technologies: Array.isArray(projectData.technologies) 
         ? projectData.technologies 
         : (projectData.technologies || '').split(',').map(t => t.trim()).filter(Boolean),
@@ -253,6 +265,10 @@ export async function getAchievements() {
  */
 export async function addAchievement(data) {
   try {
+    const images = Array.isArray(data.images)
+      ? data.images.map(u => (u || '').trim()).filter(Boolean)
+      : [];
+
     await addDoc(
       collection(db, ACHIEVEMENTS_COLLECTION),
       {
@@ -264,7 +280,8 @@ export async function addAchievement(data) {
         tags: Array.isArray(data.tags)
           ? data.tags
           : (data.tags || '').split(',').map(t => t.trim()).filter(Boolean),
-        imageUrl: data.imageUrl || '',
+        images,
+        imageUrl: images[0] || data.imageUrl || '',
         featured: Boolean(data.featured),
         createdAt: serverTimestamp()
       }
@@ -285,6 +302,10 @@ export async function addAchievement(data) {
 export async function updateAchievement(id, data) {
   try {
     const docRef = doc(db, ACHIEVEMENTS_COLLECTION, id);
+    const images = Array.isArray(data.images)
+      ? data.images.map(u => (u || '').trim()).filter(Boolean)
+      : [];
+
     const dataToUpdate = {
       title: data.title,
       organization: data.organization || '',
@@ -294,7 +315,8 @@ export async function updateAchievement(id, data) {
       tags: Array.isArray(data.tags)
         ? data.tags
         : (data.tags || '').split(',').map(t => t.trim()).filter(Boolean),
-      imageUrl: data.imageUrl || '',
+      images,
+      imageUrl: images[0] || data.imageUrl || '',
       featured: Boolean(data.featured)
     };
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -66,14 +66,35 @@
             <div class="hero-status">
               <span class="status-indicator"></span> Available for new opportunities
             </div>
-            <h1 class="hero-title">
-              Crafting scalable software as a <br />
-              <span class="typed-text">Full-Stack Engineer</span>
+
+            <h1 class="hero-name">
+              <span class="hero-name-line hero-name-solid">Pradeep</span>
+              <span class="hero-name-line hero-name-solid hero-name-accent">Lakshan</span>
             </h1>
-            <p class="hero-description">
-              I specialize in building high-performance web applications, robust server architectures, and elegant user interfaces inspired by simplicity and precision.
+
+            <p class="hero-tagline">
+              — <span class="typed-text">Full-Stack Engineer</span>
             </p>
-            
+
+            <blockquote class="hero-quote">
+              I specialize in building high-performance web applications, robust server architectures, and elegant user interfaces inspired by simplicity and precision.
+            </blockquote>
+
+            <div class="hero-stats-grid">
+              <div class="hero-stat-item">
+                <div class="hero-stat-number">24+</div>
+                <div class="hero-stat-label">Projects</div>
+              </div>
+              <div class="hero-stat-item">
+                <div class="hero-stat-number">5+</div>
+                <div class="hero-stat-label">Years Exp</div>
+              </div>
+              <div class="hero-stat-item">
+                <div class="hero-stat-number">15+</div>
+                <div class="hero-stat-label">Technologies</div>
+              </div>
+            </div>
+
             <div class="hero-actions">
               <a href="assets/resume/Pradeep-Resume.pdf" download class="btn btn-primary" id="download-resume-btn">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -104,19 +125,27 @@
           </div>
 
           <div class="hero-image-wrapper">
-            <div class="hero-image-frame">
-              <img src="assets/images/profile.png" alt="Pradeep Lakshan Profile" class="hero-img" />
-            </div>
-            <div class="hero-badge">
-              <div class="badge-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/><path d="M22 10v6"/></svg>
+            <div class="hero-photo-panel">
+              <span class="hero-decor-bracket hero-decor-bracket-tl"></span>
+              <span class="hero-decor-bracket hero-decor-bracket-br"></span>
+
+              <span class="hero-radar-ring hero-radar-ring-1"></span>
+              <span class="hero-radar-ring hero-radar-ring-2"></span>
+              <span class="hero-radar-ring hero-radar-ring-3"></span>
+
+              <div class="hero-image-frame">
+                <img src="assets/images/profile.png" alt="Pradeep Lakshan Profile" class="hero-img" />
               </div>
-              <div>
-                <div class="badge-text-title">BCS Undergraduate</div>
-                <div class="badge-text-sub">University of Ruhuna</div>
+
+              <div class="hero-open-pill">
+                <span class="status-indicator"></span> Open to Work
               </div>
             </div>
           </div>
+
+        <div class="hero-scroll-hint">
+          <span class="hero-scroll-line"></span>
+          <span class="hero-scroll-text">Scroll</span>
         </div>
       </div>
     </section>
@@ -142,21 +171,6 @@
             <p class="about-text">
               I enjoy building modern web applications, exploring machine learning technologies, and applying innovative solutions to real-world problems. I am a dedicated learner who continuously improves my technical knowledge while working toward becoming an AI Engineer and Data Scientist.
             </p>
-
-            <div class="stats-grid">
-              <div class="stat-item">
-                <div class="stat-number">24+</div>
-                <div class="stat-label">Projects Completed</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-number">5+</div>
-                <div class="stat-label">Years Experience</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-number">15+</div>
-                <div class="stat-label">Technologies</div>
-              </div>
-            </div>
           </div>
 
           <div class="about-card">
@@ -348,14 +362,6 @@
           <span class="section-tag">Portfolio Showcase</span>
           <h2 class="section-title">Featured Projects</h2>
           <p class="section-subtitle">Real-time dynamic project records fetched directly from Cloud Firestore.</p>
-        </div>
-
-        <div class="projects-filter">
-          <button class="filter-btn active" data-filter="all">All Projects</button>
-          <button class="filter-btn" data-filter="featured">Featured</button>
-          <button class="filter-btn" data-filter="react">React / Vite</button>
-          <button class="filter-btn" data-filter="typescript">TypeScript</button>
-          <button class="filter-btn" data-filter="firestore">Firestore</button>
         </div>
 
         <div class="projects-grid" id="projects-grid">

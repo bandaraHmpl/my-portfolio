@@ -14,18 +14,20 @@
     align-items: center;
   }
 
-  .hero-title {
-    font-size: 2.5rem;
+  .hero-name-line {
+    font-size: clamp(3rem, 9.5vw, 4.75rem);
   }
 
-  .hero-image-wrapper {
-    flex-direction: column;
+  .hero-stats-grid {
+    justify-content: center;
   }
 
-  .hero-badge {
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: -1rem;
+  .hero-photo-panel {
+    width: min(380px, 100%);
+  }
+
+  .hero-scroll-hint {
+    display: none;
   }
 
   .about-grid {
@@ -36,6 +38,10 @@
   .contact-grid {
     grid-template-columns: 1fr;
     gap: 2rem;
+  }
+
+  .contact-form-card {
+    order: -1;
   }
 
   .admin-layout {
@@ -93,8 +99,13 @@
     display: flex;
   }
 
-  .hero-title {
-    font-size: 2.125rem;
+  .hero-name-line {
+    font-size: clamp(3rem, 13vw, 4.5rem);
+  }
+
+  .hero-quote {
+    padding-left: 1rem;
+    font-size: 1rem;
   }
 
   .stats-grid {
@@ -141,8 +152,8 @@
 
 /* Small Mobile (Max 480px) */
 @media (max-width: 480px) {
-  .hero-title {
-    font-size: 1.75rem;
+  .hero-name-line {
+    font-size: clamp(2.75rem, 16vw, 4rem);
   }
 
   .hero-actions {
@@ -157,14 +168,64 @@
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
-  .hero-badge {
-    flex-direction: column;
-    text-align: center;
-    padding: 0.75rem 1rem;
+
+  .hero-photo-panel {
+    width: min(320px, 100%);
+    border-radius: 22px;
   }
-  
-  .badge-icon {
-    margin: 0 auto;
+
+  .hero-image-frame {
+    width: min(260px, 82%);
+  }
+}
+/* Detail View & Lightbox — mobile adjustments */
+@media (max-width: 768px) {
+  .detail-overlay {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .detail-panel {
+    max-width: 100%;
+    min-height: 100%;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .detail-back-btn {
+    top: 1rem;
+    left: 1rem;
+    margin: 1rem 0 0 1rem;
+  }
+
+  .detail-panel-inner {
+    padding: 0.5rem 1.25rem 2rem;
+  }
+
+  .detail-title {
+    font-size: 1.5rem;
+  }
+
+  .detail-gallery {
+    grid-template-columns: 1fr;
+  }
+
+  .lightbox-nav-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .lightbox-prev-btn {
+    left: 0.5rem;
+  }
+
+  .lightbox-next-btn {
+    right: 0.5rem;
+  }
+
+  .lightbox-close-btn {
+    top: 1rem;
+    right: 1rem;
   }
 }

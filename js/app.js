@@ -68,7 +68,6 @@ async function loadAndRenderProjects() {
   }
 
   renderProjectsGrid(projects);
-  setupProjectFilters(projects);
 }
 
 /**
@@ -84,13 +83,17 @@ function renderProjectsGrid(projectsToRender) {
       .join('');
 
     const defaultImg = 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80';
-    const imageUrl = project.imageUrl && project.imageUrl.trim() !== '' ? project.imageUrl : defaultImg;
+    const galleryImages = Array.isArray(project.images) && project.images.length
+      ? project.images
+      : (project.imageUrl ? [project.imageUrl] : [defaultImg]);
+    const coverImage = galleryImages[0] || defaultImg;
 
     return `
       <div class="project-card" data-techs="${escapeHtml((project.technologies || []).join(',').toLowerCase())}">
         <div class="project-image-container">
           ${project.featured ? `<span class="featured-badge">Featured</span>` : ''}
-          <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(project.title)}" class="project-img" loading="lazy" onerror="this.src='${defaultImg}'" />
+          ${galleryImages.length > 1 ? `<span class="shots-badge">${galleryImages.length} Photos</span>` : ''}
+          <img src="${escapeHtml(coverImage)}" alt="${escapeHtml(project.title)}" class="project-img" loading="lazy" onerror="this.src='${defaultImg}'" />
         </div>
         <div class="project-content">
           <h3 class="project-title">${escapeHtml(project.title)}</h3>
@@ -111,36 +114,63 @@ function renderProjectsGrid(projectsToRender) {
                 <span>Live Demo</span>
               </a>
             ` : ''}
+            <span class="project-link project-view-more" title="View all screenshots">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
+              <span>View Details</span>
+            </span>
           </div>
         </div>
       </div>
     `;
   }).join('');
-}
 
-/**
- * Filter projects by technology filter buttons
- */
-function setupProjectFilters(allProjects) {
-  const filterBtns = document.querySelectorAll('.filter-btn');
-  filterBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      filterBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      const filterValue = btn.getAttribute('data-filter');
-      if (filterValue === 'all') {
-        renderProjectsGrid(allProjects);
-      } else if (filterValue === 'featured') {
-        renderProjectsGrid(allProjects.filter(p => p.featured));
-      } else {
-        renderProjectsGrid(allProjects.filter(p => 
-          (p.technologies || []).some(t => t.toLowerCase().includes(filterValue.toLowerCase()))
-        ));
-      }
+  container.querySelectorAll('.project-card').forEach((card, idx) => {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.project-link') && !e.target.closest('.project-view-more')) return;
+      openProjectDetail(projectsToRender[idx]);
     });
   });
 }
+
+/**
+ * Opens the full-screen project detail view (title, tags, description, links,
+ * and a screenshot gallery that opens into the lightbox on click).
+ */
+function openProjectDetail(project) {
+  const defaultImg = 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80';
+  const galleryImages = Array.isArray(project.images) && project.images.length
+    ? project.images
+    : (project.imageUrl ? [project.imageUrl] : [defaultImg]);
+
+  const tagsHtml = (project.technologies || [])
+    .map(tech => `<span class="project-tag">${escapeHtml(tech)}</span>`)
+    .join('');
+
+  const linksHtml = `
+    ${project.github ? `
+      <a href="${escapeHtml(project.github)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
+        Code
+      </a>
+    ` : ''}
+    ${project.liveDemo ? `
+      <a href="${escapeHtml(project.liveDemo)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Live Demo
+      </a>
+    ` : ''}
+  `;
+
+  openDetailView({
+    title: project.title,
+    tagsHtml,
+    description: project.description,
+    linksHtml,
+    images: galleryImages
+  });
+}
+
+
 
 /**
  * Handle contact form submission and Firestore storage
@@ -262,7 +292,7 @@ async function loadAndRenderAchievements() {
     return parseInt(b.year) - parseInt(a.year);
   });
 
-  container.innerHTML = sortedAchievements.map(item => {
+  container.innerHTML = sortedAchievements.map((item, idx) => {
     // Category badge if exists
     const categoryBadge = item.category ? `
       <span style="display: inline-block; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.15rem 0.6rem; border-radius: var(--radius-pill); background: var(--bg-tertiary); color: var(--text-muted); margin-bottom: 0.5rem;">
@@ -275,15 +305,20 @@ async function loadAndRenderAchievements() {
       <span class="project-tag">${escapeHtml(tag)}</span>
     `).join('');
 
+    const galleryImages = Array.isArray(item.images) && item.images.length
+      ? item.images
+      : (item.imageUrl && item.imageUrl.trim() !== '' ? [item.imageUrl] : []);
+
     // Image with styling
-    const imageHtml = item.imageUrl && item.imageUrl.trim() !== '' ? `
-      <div style="margin-top: 1rem; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-color);">
-        <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.title)}" style="width: 100%; max-height: 200px; object-fit: cover;" loading="lazy" />
+    const imageHtml = galleryImages.length ? `
+      <div style="position: relative; margin-top: 1rem; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-color);">
+        ${galleryImages.length > 1 ? `<span class="shots-badge">${galleryImages.length} Photos</span>` : ''}
+        <img src="${escapeHtml(galleryImages[0])}" alt="${escapeHtml(item.title)}" style="width: 100%; max-height: 200px; object-fit: cover;" loading="lazy" />
       </div>
     ` : '';
 
     return `
-      <div class="timeline-item">
+      <div class="timeline-item" data-achievement-index="${idx}">
         <div class="timeline-dot"></div>
         <div class="timeline-content">
           <div class="timeline-header">
@@ -313,4 +348,209 @@ async function loadAndRenderAchievements() {
       </div>
     `;
   }).join('');
+
+  container.querySelectorAll('.timeline-item').forEach(item => {
+    item.style.cursor = 'pointer';
+    item.addEventListener('click', () => {
+      const idx = parseInt(item.getAttribute('data-achievement-index'), 10);
+      openAchievementDetail(sortedAchievements[idx]);
+    });
+  });
+}
+
+/**
+ * Opens the full-screen achievement detail view (title, org, category, tags,
+ * description, and a photo gallery that opens into the lightbox on click).
+ */
+function openAchievementDetail(item) {
+  const galleryImages = Array.isArray(item.images) && item.images.length
+    ? item.images
+    : (item.imageUrl && item.imageUrl.trim() !== '' ? [item.imageUrl] : []);
+
+  const tagsHtml = `
+    ${item.category ? `<span class="project-tag">${escapeHtml(item.category)}</span>` : ''}
+    ${item.year ? `<span class="project-tag">${escapeHtml(item.year)}</span>` : ''}
+    ${(item.tags || []).map(tag => `<span class="project-tag">${escapeHtml(tag)}</span>`).join('')}
+  `;
+
+  openDetailView({
+    title: `${item.title}${item.organization ? ' — ' + item.organization : ''}`,
+    tagsHtml,
+    description: item.description || '',
+    linksHtml: '',
+    images: galleryImages
+  });
+}
+// ==================== DETAIL VIEW (shared by Projects & Achievements) ====================
+
+/**
+ * Creates (once) and returns the full-screen detail overlay used to show a
+ * project's or achievement's title, tags, description, links, and photo grid.
+ */
+function ensureDetailOverlay() {
+  let overlay = document.getElementById('detail-overlay');
+  if (overlay) return overlay;
+
+  overlay = document.createElement('div');
+  overlay.id = 'detail-overlay';
+  overlay.className = 'detail-overlay';
+  overlay.innerHTML = `
+    <div class="detail-panel">
+      <button class="detail-back-btn" id="detail-back-btn" aria-label="Back">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      </button>
+      <div class="detail-panel-inner">
+        <h2 class="detail-title" id="detail-title"></h2>
+        <div class="detail-tags" id="detail-tags"></div>
+        <p class="detail-description" id="detail-description"></p>
+        <div class="detail-links" id="detail-links"></div>
+        <div class="detail-gallery" id="detail-gallery"></div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#detail-back-btn').addEventListener('click', closeDetailView);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeDetailView();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (overlay.classList.contains('active') && e.key === 'Escape') closeDetailView();
+  });
+
+  return overlay;
+}
+
+/**
+ * Opens the detail overlay populated with the given content.
+ * @param {{title: string, tagsHtml?: string, description?: string, linksHtml?: string, images: string[]}} data
+ */
+function openDetailView({ title, tagsHtml, description, linksHtml, images }) {
+  const overlay = ensureDetailOverlay();
+
+  overlay.querySelector('#detail-title').textContent = title;
+  overlay.querySelector('#detail-tags').innerHTML = tagsHtml || '';
+  overlay.querySelector('#detail-description').textContent = description || '';
+  overlay.querySelector('#detail-links').innerHTML = linksHtml || '';
+
+  const galleryImages = images && images.length ? images : [];
+  const galleryEl = overlay.querySelector('#detail-gallery');
+  galleryEl.innerHTML = galleryImages.map((src, idx) => `
+    <div class="detail-gallery-item" data-index="${idx}">
+      <img src="${escapeHtml(src)}" alt="${escapeHtml(title)} screenshot ${idx + 1}" loading="lazy" />
+    </div>
+  `).join('');
+
+  galleryEl.querySelectorAll('.detail-gallery-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx = parseInt(el.getAttribute('data-index'), 10);
+      openLightbox(galleryImages, idx);
+    });
+  });
+
+  document.body.style.overflow = 'hidden';
+  overlay.classList.add('active');
+  overlay.querySelector('.detail-panel').scrollTop = 0;
+}
+
+function closeDetailView() {
+  const overlay = document.getElementById('detail-overlay');
+  if (overlay) overlay.classList.remove('active');
+  // Only restore scrolling if the lightbox isn't also open on top of it
+  const lightbox = document.getElementById('lightbox-overlay');
+  if (!lightbox || !lightbox.classList.contains('active')) {
+    document.body.style.overflow = '';
+  }
+}
+
+// ==================== LIGHTBOX (full-screen photo gallery) ====================
+
+let lightboxImages = [];
+let lightboxIndex = 0;
+
+function ensureLightboxOverlay() {
+  let overlay = document.getElementById('lightbox-overlay');
+  if (overlay) return overlay;
+
+  overlay = document.createElement('div');
+  overlay.id = 'lightbox-overlay';
+  overlay.className = 'lightbox-overlay';
+  overlay.innerHTML = `
+    <button class="lightbox-close-btn" id="lightbox-close-btn" aria-label="Close">&times;</button>
+    <button class="lightbox-nav-btn lightbox-prev-btn" id="lightbox-prev-btn" aria-label="Previous image">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <img class="lightbox-img" id="lightbox-img" src="" alt="" />
+    <button class="lightbox-nav-btn lightbox-next-btn" id="lightbox-next-btn" aria-label="Next image">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <div class="lightbox-counter" id="lightbox-counter"></div>
+  `;
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#lightbox-close-btn').addEventListener('click', closeLightbox);
+  overlay.querySelector('#lightbox-prev-btn').addEventListener('click', (e) => { e.stopPropagation(); navigateLightbox(-1); });
+  overlay.querySelector('#lightbox-next-btn').addEventListener('click', (e) => { e.stopPropagation(); navigateLightbox(1); });
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeLightbox();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (!overlay.classList.contains('active')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') navigateLightbox(-1);
+    if (e.key === 'ArrowRight') navigateLightbox(1);
+  });
+
+  // Basic swipe support for mobile
+  let touchStartX = 0;
+  overlay.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+  }, { passive: true });
+  overlay.addEventListener('touchend', (e) => {
+    const diff = e.changedTouches[0].screenX - touchStartX;
+    if (Math.abs(diff) > 50) navigateLightbox(diff > 0 ? -1 : 1);
+  }, { passive: true });
+
+  return overlay;
+}
+
+function openLightbox(images, startIndex = 0) {
+  if (!images || images.length === 0) return;
+  lightboxImages = images;
+  lightboxIndex = startIndex;
+
+  const overlay = ensureLightboxOverlay();
+  updateLightboxImage();
+  document.body.style.overflow = 'hidden';
+  overlay.classList.add('active');
+}
+
+function updateLightboxImage() {
+  const overlay = document.getElementById('lightbox-overlay');
+  if (!overlay) return;
+
+  overlay.querySelector('#lightbox-img').src = lightboxImages[lightboxIndex];
+  const counter = overlay.querySelector('#lightbox-counter');
+  counter.textContent = lightboxImages.length > 1 ? `${lightboxIndex + 1} / ${lightboxImages.length}` : '';
+
+  const showNav = lightboxImages.length > 1;
+  overlay.querySelector('#lightbox-prev-btn').style.display = showNav ? 'flex' : 'none';
+  overlay.querySelector('#lightbox-next-btn').style.display = showNav ? 'flex' : 'none';
+}
+
+function navigateLightbox(direction) {
+  if (lightboxImages.length === 0) return;
+  lightboxIndex = (lightboxIndex + direction + lightboxImages.length) % lightboxImages.length;
+  updateLightboxImage();
+}
+
+function closeLightbox() {
+  const overlay = document.getElementById('lightbox-overlay');
+  if (overlay) overlay.classList.remove('active');
+  // Only restore scrolling if the detail view isn't also open underneath
+  const detail = document.getElementById('detail-overlay');
+  if (!detail || !detail.classList.contains('active')) {
+    document.body.style.overflow = '';
+  }
 }
