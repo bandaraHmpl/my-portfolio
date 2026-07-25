@@ -1,0 +1,83 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // User logged in?
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Admin check using UID
+    function isAdmin() {
+      return isAuthenticated() &&
+             request.auth.uid == "PiIzwIhTgyPuGcE16wLgmZ7aDhn1";
+    }
+
+    // Validate Project
+    function isValidProject() {
+      return request.resource.data.keys().hasAll([
+        'title',
+        'description'
+      ]) &&
+      request.resource.data.title is string &&
+      request.resource.data.title.size() > 0 &&
+      request.resource.data.description is string &&
+      request.resource.data.description.size() > 0;
+    }
+
+    // Validate Achievement
+    function isValidAchievement() {
+      return request.resource.data.keys().hasAll([
+        'title',
+        'organization'
+      ]) &&
+      request.resource.data.title is string &&
+      request.resource.data.title.size() > 0 &&
+      request.resource.data.organization is string &&
+      request.resource.data.organization.size() > 0;
+    }
+
+    // ================= Projects =================
+    match /projects/{projectId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidProject();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ================= Achievements =================
+    match /achievements/{achievementId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidAchievement();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ================= Messages =================
+    match /messages/{messageId} {
+
+      allow create: if
+        request.resource.data.keys().hasAll([
+          'name',
+          'email',
+          'message'
+        ]) &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.email is string &&
+        request.resource.data.email.matches('^[^@]+@[^@]+\\.[^@]+$') &&
+        request.resource.data.message is string &&
+        request.resource.data.message.size() > 0 &&
+        request.resource.data.message.size() < 1000;
+
+      allow read: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ================= Admin =================
+    match /admin/{document} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

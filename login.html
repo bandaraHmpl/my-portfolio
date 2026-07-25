@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login — Portfolio Management</title>
+  
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+</head>
+<body class="auth-page-wrapper">
+
+  <div class="auth-card">
+    <div class="auth-header">
+      <a href="index.html" class="auth-logo">
+        <span class="nav-logo-dot"></span> Portfolio Admin
+      </a>
+      <p class="auth-subtitle">Sign in to manage projects &amp; message records</p>
+    </div>
+
+    <div class="auth-toggle-tab">
+      <button class="auth-tab-btn active" id="tab-login-btn">Sign In</button>
+    </div>
+
+    <form id="auth-form">
+      <div class="form-group">
+        <label for="auth-email" class="form-label">Email Address</label>
+        <input type="email" id="auth-email" class="form-input" placeholder="Enter your email" required />
+      </div>
+
+      <div class="form-group">
+        <label for="auth-password" class="form-label">Password</label>
+        <input type="password" id="auth-password" class="form-input" placeholder="Enter your password" required />
+      </div>
+
+      <div id="auth-error-msg" style="color: #ef4444; font-size: 0.8125rem; margin-bottom: 1rem; display: none;"></div>
+
+      <button type="submit" class="btn btn-primary" id="auth-submit-btn" style="width: 100%;">
+        Sign In
+      </button>
+    </form>
+
+    <div style="text-align: center; margin-top: 1.5rem;">
+      <a href="index.html" style="font-size: 0.8125rem; color: var(--text-secondary); text-decoration: underline;">
+        &larr; Return to Public Website
+      </a>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initTheme } from './js/theme.js';
+    import { loginAdmin, onAuthUpdate } from './js/auth.js';
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+
+      // If already logged in, redirect straight to admin.html
+      onAuthUpdate(user => {
+        if (user) {
+          window.location.href = 'admin.html';
+        }
+      });
+
+      const submitBtn = document.getElementById('auth-submit-btn');
+      const errorMsg = document.getElementById('auth-error-msg');
+      const form = document.getElementById('auth-form');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorMsg.style.display = 'none';
+
+        const email = document.getElementById('auth-email').value.trim();
+        const password = document.getElementById('auth-password').value.trim();
+
+        if (!email || !password) {
+          errorMsg.textContent = 'Please enter email and password.';
+          errorMsg.style.display = 'block';
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Signing in...';
+
+        const res = await loginAdmin(email, password);
+
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign In';
+
+        if (res.success) {
+          window.location.href = 'admin.html';
+        } else {
+          errorMsg.textContent = res.error;
+          errorMsg.style.display = 'block';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

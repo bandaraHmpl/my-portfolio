@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — Portfolio Control Panel</title>
+  
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+</head>
+<body>
+
+  <div class="admin-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar-header">
+        <a href="index.html" class="nav-logo">
+          <span class="nav-logo-dot"></span> Admin Portal
+        </a>
+        <button class="mobile-menu-btn admin-mobile-menu-btn" id="admin-mobile-menu-btn" aria-label="Toggle Menu" aria-expanded="false" aria-controls="admin-nav-menu">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="admin-sidebar-nav-wrap">
+        <nav class="admin-sidebar-nav" id="admin-nav-menu">
+          <a href="#projects-section" class="admin-nav-item active">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+            Manage Projects
+          </a>
+          <a href="#achievements-section" class="admin-nav-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6 6 .9-4.5 4.4 1 6.2L12 17l-5.5 2.5 1-6.2L3 8.9 9 8z"/></svg>
+            Manage Achievements & Milestones
+          </a>
+          <a href="#messages-section" class="admin-nav-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Contact Messages
+            <span class="nav-badge" id="messages-nav-badge" style="display:none;">0</span>
+          </a>
+          <a href="index.html" class="admin-nav-item" target="_blank">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            View Public Site
+          </a>
+        </nav>
+      </div>
+
+      <div class="admin-user-profile">
+        <div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">Logged in as</div>
+          <div class="user-email-text" id="admin-email-display">Loading...</div>
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <button class="theme-toggle-btn" style="width: 34px; height: 34px;" title="Toggle Theme"></button>
+          <button class="action-btn-icon delete" id="logout-btn" title="Log Out">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="admin-main-content">
+      <div class="admin-topbar">
+        <div class="admin-title-group">
+          <h1>Project Management</h1>
+          <p>Add, edit, and organize portfolio project cards synced directly with Firestore.</p>
+        </div>
+
+        <div class="admin-actions">
+          <button class="btn btn-primary" id="add-project-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add New Project
+          </button>
+        </div>
+      </div>
+
+      <!-- Projects Section -->
+      <section id="projects-section" class="admin-card">
+        <div class="admin-card-header">
+          <h2 class="admin-card-title">All Projects Collection</h2>
+        </div>
+
+        <div class="cards-grid" id="projects-table-body">
+          <!-- Populated by js/admin.js -->
+        </div>
+      </section>
+
+      <!-- Achievements Section - Table Layout (Project Style) -->
+      <section id="achievements-section" class="admin-card">
+        <div class="admin-card-header">
+          <h2 class="admin-card-title">
+            Achievements & Milestones
+          </h2>
+          <button class="btn btn-primary" id="add-achievement-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Achievement
+          </button>
+        </div>
+
+        <div class="cards-grid" id="achievements-table-body">
+          <!-- Populated by js/admin.js -->
+        </div>
+      </section>
+
+      <!-- Contact Messages Section -->
+      <section id="messages-section" class="admin-card">
+        <div class="admin-card-header">
+          <h2 class="admin-card-title">Received Contact Messages</h2>
+        </div>
+
+        <div class="cards-grid" id="messages-table-body">
+          <!-- Populated by js/admin.js -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Add/Edit Project Modal -->
+  <div class="modal-overlay" id="project-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-title">Add New Project</h3>
+        <button class="modal-close-btn modal-close-trigger">&times;</button>
+      </div>
+
+      <form id="project-form">
+        <div class="form-group">
+          <label for="project-title" class="form-label">Project Title *</label>
+          <input type="text" id="project-title" class="form-input" placeholder="e.g. Minimalist Task Manager" required />
+        </div>
+
+        <div class="form-group">
+          <label for="project-desc" class="form-label">Description *</label>
+          <textarea id="project-desc" class="form-textarea" placeholder="Brief explanation of features and impact..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="project-img-url" class="form-label">Image URL</label>
+          <input type="url" id="project-img-url" class="form-input" placeholder="https://images.unsplash.com/photo-1507238691740-187a5b1d37b8" />
+          <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">
+            Paste an image URL from Cloudinary, Unsplash, GitHub, or ImgBB. Leave empty for default placeholder.
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="project-techs" class="form-label">Technologies (Comma separated)</label>
+          <input type="text" id="project-techs" class="form-input" placeholder="TypeScript, React, Tailwind CSS, Firestore" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="project-github" class="form-label">GitHub Repository URL</label>
+            <input type="url" id="project-github" class="form-input" placeholder="https://github.com/username/repo" />
+          </div>
+
+          <div class="form-group">
+            <label for="project-demo" class="form-label">Live Demo URL</label>
+            <input type="url" id="project-demo" class="form-input" placeholder="https://my-app.example.com" />
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 0.5rem; margin-bottom: 1.5rem;">
+          <label class="checkbox-label">
+            <input type="checkbox" id="project-featured" checked />
+            <span>Highlight as Featured Project</span>
+          </label>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary modal-close-trigger">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="modal-submit-btn">Save Project</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add/Edit Achievement Modal -->
+  <div class="modal-overlay" id="achievement-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title" id="achievement-modal-title">Add Achievement</h3>
+        <button class="modal-close-btn achievement-close">&times;</button>
+      </div>
+
+      <form id="achievement-form">
+        <div class="form-group">
+          <label for="achievement-title" class="form-label">Title *</label>
+          <input type="text" id="achievement-title" class="form-input" placeholder="e.g. Google Data Analytics Certificate" required />
+        </div>
+
+        <div class="form-group">
+          <label for="achievement-org" class="form-label">Organization *</label>
+          <input type="text" id="achievement-org" class="form-input" placeholder="e.g. Google" required />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="achievement-year" class="form-label">Year</label>
+            <input type="text" id="achievement-year" class="form-input" placeholder="2024" />
+          </div>
+          <div class="form-group">
+            <label for="achievement-category" class="form-label">Category</label>
+            <select id="achievement-category" class="form-input">
+              <option value="Certificate">Certificate</option>
+              <option value="Education">Education</option>
+              <option value="Award">Award</option>
+              <option value="Workshop">Workshop</option>
+              <option value="Hackathon">Hackathon</option>
+              <option value="Other" selected>Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="achievement-desc" class="form-label">Description</label>
+          <textarea id="achievement-desc" class="form-textarea" placeholder="Brief description of the achievement..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="achievement-tags" class="form-label">Tags (Comma separated)</label>
+          <input type="text" id="achievement-tags" class="form-input" placeholder="Data Science, Python, Certificate" />
+        </div>
+
+        <div class="form-group">
+          <label for="achievement-image" class="form-label">Image URL</label>
+          <input type="url" id="achievement-image" class="form-input" placeholder="https://images.unsplash.com/photo-..." />
+          <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">
+            Paste an image URL. Leave empty for default placeholder.
+          </span>
+        </div>
+
+        <div class="form-group" style="margin-top: 0.5rem; margin-bottom: 1.5rem;">
+          <label class="checkbox-label">
+            <input type="checkbox" id="achievement-featured" checked />
+            <span>Highlight as Featured Achievement</span>
+          </label>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary achievement-close">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="achievement-submit-btn">Save Achievement</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Admin sidebar hamburger-dropdown toggle (mirrors the public site's mobile nav)
+    document.addEventListener('DOMContentLoaded', () => {
+      const menuBtn = document.getElementById('admin-mobile-menu-btn');
+      const navMenu = document.getElementById('admin-nav-menu');
+      if (!menuBtn || !navMenu) return;
+
+      const closeMenu = () => {
+        navMenu.classList.remove('mobile-open');
+        menuBtn.setAttribute('aria-expanded', 'false');
+      };
+
+      menuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = navMenu.classList.toggle('mobile-open');
+        menuBtn.setAttribute('aria-expanded', String(isOpen));
+      });
+
+      navMenu.querySelectorAll('.admin-nav-item').forEach((link) => {
+        link.addEventListener('click', closeMenu);
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!navMenu.classList.contains('mobile-open')) return;
+        if (navMenu.contains(e.target) || menuBtn.contains(e.target)) return;
+        closeMenu();
+      });
+
+      window.addEventListener('resize', () => {
+        if (window.innerWidth > 992) closeMenu();
+      });
+    });
+  </script>
+
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>
