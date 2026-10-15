@@ -2,15 +2,24 @@
 import { initTheme } from './theme.js';
 import { initNavigation } from './navigation.js';
 import { initTypingEffect, initScrollToTop, initScrollReveal } from './animations.js';
-import { getProjects, saveContactMessage, getAchievements } from './firestore.js';
+import { getProjects, saveContactMessage, getAchievements, getSkills, getProfileSettings } from './firestore.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // 1. Initialize Core UI Modules
+  // Initialize Core UI Modules
   initTheme();
   initNavigation();
   initScrollToTop();
 
-  // 2. Typing Effect on Hero Role Title
+  // Load Profile Photo & Resume Link dynamically
+  await loadAndRenderProfileAndResume();
+
+  // Dynamic Skills Load & Render from Firestore
+  await loadAndRenderSkills();
+
+  // Hero Dynamic Stats Update (Projects, Years in Edu, Technologies)
+  await updateHeroDynamicStats();
+
+  // Typing Effect on Hero Role Title
   const typedSpan = document.querySelector('.typed-text');
   if (typedSpan) {
     initTypingEffect(typedSpan, [
@@ -21,18 +30,130 @@ document.addEventListener('DOMContentLoaded', async () => {
     ]);
   }
 
-  // 3. Dynamic Projects Fetch & Render from Firestore
+  // Dynamic Projects Fetch & Render from Firestore
   await loadAndRenderProjects();
 
-  // 4. Achievements
+  // Achievements
   await loadAndRenderAchievements();
 
-  // 5. Contact Form Submission
+  // Contact Form Submission
   setupContactForm();
 
-  // 6. Scroll reveal animation trigger
+  // Scroll reveal animation trigger
   initScrollReveal();
 });
+
+/**
+ * Loads and updates Profile Photo & Resume Download link dynamically from Firestore
+ */
+async function loadAndRenderProfileAndResume() {
+  const res = await getProfileSettings();
+  if (res.success && res.profile) {
+    if (res.profile.photoUrl) {
+      const profileImgs = document.querySelectorAll('.hero-img, #hero-profile-photo');
+      profileImgs.forEach(img => {
+        img.src = res.profile.photoUrl;
+      });
+    }
+    if (res.profile.resumeUrl) {
+      const resumeBtn = document.getElementById('download-resume-btn');
+      if (resumeBtn) {
+        resumeBtn.href = res.profile.resumeUrl;
+        resumeBtn.setAttribute('target', '_blank');
+      }
+    }
+  }
+}
+
+/**
+ * Dynamically loads and renders skills grouped by category from Firestore
+ */
+async function loadAndRenderSkills() {
+  const container = document.querySelector('.skills-wrapper');
+  if (!container) return;
+
+  const res = await getSkills();
+  if (!res.success || !res.skills || res.skills.length === 0) return;
+
+  const categories = ['Frontend', 'Backend', 'Database', 'Tools & Development', 'Version Control'];
+  const grouped = {};
+  categories.forEach(cat => grouped[cat] = []);
+
+  res.skills.forEach(skill => {
+    const cat = skill.category || 'Tools & Development';
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(skill);
+  });
+
+  const categoryIcons = {
+    'Frontend': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
+    'Backend': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>`,
+    'Database': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>`,
+    'Tools & Development': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,
+    'Version Control': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>`
+  };
+
+  let html = '';
+  Object.keys(grouped).forEach(cat => {
+    if (grouped[cat].length === 0) return;
+
+    const badges = grouped[cat].map(s => `
+      <div class="tech-badge">
+        ${s.iconClass ? `<i class="${escapeHtml(s.iconClass)} tech-icon"></i>` : '<i class="fa-solid fa-code tech-icon"></i>'}
+        <span>${escapeHtml(s.name)}</span>
+      </div>
+    `).join('');
+
+    html += `
+      <div class="skill-category-group">
+        <h3 class="skill-category-title">
+          ${categoryIcons[cat] || categoryIcons['Tools & Development']}
+          ${escapeHtml(cat)}
+        </h3>
+        <div class="skills-badges-list">
+          ${badges}
+        </div>
+      </div>
+    `;
+  });
+
+  if (html) {
+    container.innerHTML = html;
+  }
+}
+
+/**
+ * Calculates and updates Hero section stats dynamically
+ */
+async function updateHeroDynamicStats() {
+  const startDate = new Date('2024-08-12');
+  const today = new Date();
+  const diffInMs = today - startDate;
+  const diffInYears = diffInMs / (1000 * 60 * 60 * 24 * 365.25);
+
+  const yearsText = `${diffInYears.toFixed(1)}+`;
+  const yearsEl = document.getElementById('hero-stat-years');
+  if (yearsEl) {
+    yearsEl.textContent = yearsText;
+  }
+
+  const projectsRes = await getProjects();
+  const projectsCount = (projectsRes.projects || []).length;
+  const projectsEl = document.getElementById('hero-stat-projects');
+  if (projectsEl) {
+    projectsEl.textContent = `${projectsCount}+`;
+  }
+
+  const skillsRes = await getSkills();
+  const skillsCount = (skillsRes && skillsRes.success && Array.isArray(skillsRes.skills)) ? skillsRes.skills.length : 0;
+  const staticBadgesCount = document.querySelectorAll('.tech-badge').length;
+  const totalTechs = skillsCount > 0 ? skillsCount : staticBadgesCount;
+
+  const techsEl = document.getElementById('hero-stat-techs');
+  if (techsEl) {
+    techsEl.textContent = `${totalTechs}+`;
+  }
+}
 
 /**
  * Loads projects dynamically from Firestore and renders card grid
@@ -41,7 +162,6 @@ async function loadAndRenderProjects() {
   const container = document.getElementById('projects-grid');
   if (!container) return;
 
-  // Render Skeleton Loading state
   container.innerHTML = Array(3).fill(0).map(() => `
     <div class="project-card">
       <div class="project-image-container skeleton"></div>
@@ -132,10 +252,6 @@ function renderProjectsGrid(projectsToRender) {
   });
 }
 
-/**
- * Opens the full-screen project detail view (title, tags, description, links,
- * and a screenshot gallery that opens into the lightbox on click).
- */
 function openProjectDetail(project) {
   const defaultImg = 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80';
   const galleryImages = Array.isArray(project.images) && project.images.length
@@ -170,11 +286,6 @@ function openProjectDetail(project) {
   });
 }
 
-
-
-/**
- * Handle contact form submission and Firestore storage
- */
 function setupContactForm() {
   const form = document.getElementById('contact-form');
   if (!form) return;
@@ -211,9 +322,6 @@ function setupContactForm() {
   });
 }
 
-/**
- * Show toast notification
- */
 export function showToast(message, type = 'success') {
   let container = document.querySelector('.toast-container');
   if (!container) {
@@ -226,8 +334,8 @@ export function showToast(message, type = 'success') {
   toast.className = `toast ${type}`;
   toast.innerHTML = `
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      ${type === 'success' 
-        ? '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>' 
+      ${type === 'success'
+        ? '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>'
         : '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'}
     </svg>
     <span>${escapeHtml(message)}</span>
@@ -243,9 +351,6 @@ export function showToast(message, type = 'success') {
   }, 4000);
 }
 
-/**
- * Escape HTML special characters
- */
 function escapeHtml(str) {
   if (typeof str !== 'string') return str;
   return str.replace(/[&<>"']/g, match => {
@@ -260,14 +365,10 @@ function escapeHtml(str) {
   });
 }
 
-/**
- * Load and render achievements in timeline
- */
 async function loadAndRenderAchievements() {
   const container = document.getElementById('achievements-timeline');
   if (!container) return;
 
-  // Show loading state
   container.innerHTML = `
     <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
       Loading achievements...
@@ -285,7 +386,6 @@ async function loadAndRenderAchievements() {
     return;
   }
 
-  // Sort achievements by year (newest first)
   const sortedAchievements = [...res.achievements].sort((a, b) => {
     if (!a.year) return 1;
     if (!b.year) return -1;
@@ -293,14 +393,12 @@ async function loadAndRenderAchievements() {
   });
 
   container.innerHTML = sortedAchievements.map((item, idx) => {
-    // Category badge if exists
     const categoryBadge = item.category ? `
       <span style="display: inline-block; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.15rem 0.6rem; border-radius: var(--radius-pill); background: var(--bg-tertiary); color: var(--text-muted); margin-bottom: 0.5rem;">
         ${escapeHtml(item.category)}
       </span>
     ` : '';
 
-    // Tags
     const tagsHtml = (item.tags || []).map(tag => `
       <span class="project-tag">${escapeHtml(tag)}</span>
     `).join('');
@@ -309,7 +407,6 @@ async function loadAndRenderAchievements() {
       ? item.images
       : (item.imageUrl && item.imageUrl.trim() !== '' ? [item.imageUrl] : []);
 
-    // Image with styling
     const imageHtml = galleryImages.length ? `
       <div style="position: relative; margin-top: 1rem; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-color);">
         ${galleryImages.length > 1 ? `<span class="shots-badge">${galleryImages.length} Photos</span>` : ''}
@@ -358,10 +455,6 @@ async function loadAndRenderAchievements() {
   });
 }
 
-/**
- * Opens the full-screen achievement detail view (title, org, category, tags,
- * description, and a photo gallery that opens into the lightbox on click).
- */
 function openAchievementDetail(item) {
   const galleryImages = Array.isArray(item.images) && item.images.length
     ? item.images
@@ -381,12 +474,7 @@ function openAchievementDetail(item) {
     images: galleryImages
   });
 }
-// ==================== DETAIL VIEW (shared by Projects & Achievements) ====================
 
-/**
- * Creates (once) and returns the full-screen detail overlay used to show a
- * project's or achievement's title, tags, description, links, and photo grid.
- */
 function ensureDetailOverlay() {
   let overlay = document.getElementById('detail-overlay');
   if (overlay) return overlay;
@@ -421,10 +509,6 @@ function ensureDetailOverlay() {
   return overlay;
 }
 
-/**
- * Opens the detail overlay populated with the given content.
- * @param {{title: string, tagsHtml?: string, description?: string, linksHtml?: string, images: string[]}} data
- */
 function openDetailView({ title, tagsHtml, description, linksHtml, images }) {
   const overlay = ensureDetailOverlay();
 
@@ -456,14 +540,11 @@ function openDetailView({ title, tagsHtml, description, linksHtml, images }) {
 function closeDetailView() {
   const overlay = document.getElementById('detail-overlay');
   if (overlay) overlay.classList.remove('active');
-  // Only restore scrolling if the lightbox isn't also open on top of it
   const lightbox = document.getElementById('lightbox-overlay');
   if (!lightbox || !lightbox.classList.contains('active')) {
     document.body.style.overflow = '';
   }
 }
-
-// ==================== LIGHTBOX (full-screen photo gallery) ====================
 
 let lightboxImages = [];
 let lightboxIndex = 0;
@@ -502,7 +583,6 @@ function ensureLightboxOverlay() {
     if (e.key === 'ArrowRight') navigateLightbox(1);
   });
 
-  // Basic swipe support for mobile
   let touchStartX = 0;
   overlay.addEventListener('touchstart', (e) => {
     touchStartX = e.changedTouches[0].screenX;
@@ -548,7 +628,6 @@ function navigateLightbox(direction) {
 function closeLightbox() {
   const overlay = document.getElementById('lightbox-overlay');
   if (overlay) overlay.classList.remove('active');
-  // Only restore scrolling if the detail view isn't also open underneath
   const detail = document.getElementById('detail-overlay');
   if (!detail || !detail.classList.contains('active')) {
     document.body.style.overflow = '';
