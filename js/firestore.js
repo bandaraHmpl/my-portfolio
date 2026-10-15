@@ -5,6 +5,7 @@ import {
   addDoc,
   getDoc,
   doc,
+  setDoc,
   updateDoc,
   deleteDoc,
   query,
@@ -16,9 +17,41 @@ import { db } from './firebase-config.js';
 const PROJECTS_COLLECTION = 'projects';
 const MESSAGES_COLLECTION = 'messages';
 const ACHIEVEMENTS_COLLECTION = 'achievements';
+const SETTINGS_COLLECTION = 'settings';
 
 /**
- * Fetch all projects from Firestore (returns SAMPLE_PROJECTS if collection is empty or unauthenticated)
+ * Profile Photo abong Resume Data fetch kora
+ */
+export async function getProfileSettings() {
+  try {
+    const docRef = doc(db, SETTINGS_COLLECTION, 'profile');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return { success: true, profile: docSnap.data() };
+    }
+    return { success: true, profile: null };
+  } catch (error) {
+    console.error('Error fetching profile settings:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Profile Photo abong Resume Data save/update kora
+ */
+export async function saveProfileSettings(data) {
+  try {
+    const docRef = doc(db, SETTINGS_COLLECTION, 'profile');
+    await setDoc(docRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
+    return { success: true };
+  } catch (error) {
+    console.error('Error saving profile settings:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Fetch all projects from Firestore
  */
 export async function getProjects() {
   try {
@@ -27,21 +60,7 @@ export async function getProjects() {
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
-      // Attempt seeding if authenticated, otherwise return SAMPLE_PROJECTS fallback
-      /**const seedResult = await seedInitialProjects();
-      if (seedResult.success) {
-        const newSnapshot = await getDocs(q);
-        const projects = newSnapshot.docs.map(docSnap => ({
-          id: docSnap.id,
-          ...docSnap.data()
-        }));
-        return { success: true, projects };
-      }
-      return { success: true, projects: SAMPLE_PROJECTS };**/
-      return {
-        success: true,
-        projects: []
-      };
+      return { success: true, projects: [] };
     }
 
     const projects = snapshot.docs.map(docSnap => ({
@@ -51,13 +70,9 @@ export async function getProjects() {
 
     return { success: true, projects };
   } catch (error) {
-  console.error('Fetching projects failed:', error.message);
-
-  return {
-    success:false,
-    projects:[]
-  };
-}
+    console.error('Fetching projects failed:', error.message);
+    return { success: false, projects: [] };
+  }
 }
 
 /**
@@ -91,8 +106,8 @@ export async function addProject(projectData) {
       description: projectData.description || '',
       images,
       imageUrl: images[0] || projectData.imageUrl || defaultImg,
-      technologies: Array.isArray(projectData.technologies) 
-        ? projectData.technologies 
+      technologies: Array.isArray(projectData.technologies)
+        ? projectData.technologies
         : (projectData.technologies || '').split(',').map(t => t.trim()).filter(Boolean),
       github: projectData.github || '',
       liveDemo: projectData.liveDemo || '',
@@ -124,8 +139,8 @@ export async function updateProject(id, projectData) {
       description: projectData.description,
       images,
       imageUrl: images[0] || projectData.imageUrl || defaultImg,
-      technologies: Array.isArray(projectData.technologies) 
-        ? projectData.technologies 
+      technologies: Array.isArray(projectData.technologies)
+        ? projectData.technologies
         : (projectData.technologies || '').split(',').map(t => t.trim()).filter(Boolean),
       github: projectData.github,
       liveDemo: projectData.liveDemo,
@@ -153,22 +168,6 @@ export async function deleteProject(id) {
     return { success: false, error: error.message };
   }
 }
-
-/**
- * Seed initial projects into Firestore
- 
-export async function seedInitialProjects() {
-  try {
-    const projectsCol = collection(db, PROJECTS_COLLECTION);
-    for (const project of SAMPLE_PROJECTS) {
-      await addDoc(projectsCol, project);
-    }
-    return { success: true };
-  } catch (error) {
-    console.warn('Could not seed projects to Firestore (requires admin authentication):', error.message);
-    return { success: false, error: error.message };
-  }
-}**/
 
 /**
  * Save contact message to Firestore
@@ -247,16 +246,9 @@ export async function getAchievements() {
       ...doc.data()
     }));
 
-    return {
-      success: true,
-      achievements
-    };
+    return { success: true, achievements };
   } catch (error) {
-    return {
-      success: false,
-      achievements: [],
-      error: error.message
-    };
+    return { success: false, achievements: [], error: error.message };
   }
 }
 
@@ -269,30 +261,24 @@ export async function addAchievement(data) {
       ? data.images.map(u => (u || '').trim()).filter(Boolean)
       : [];
 
-    await addDoc(
-      collection(db, ACHIEVEMENTS_COLLECTION),
-      {
-        title: data.title,
-        organization: data.organization || '',
-        year: data.year || '',
-        category: data.category || 'Other',
-        description: data.description || '',
-        tags: Array.isArray(data.tags)
-          ? data.tags
-          : (data.tags || '').split(',').map(t => t.trim()).filter(Boolean),
-        images,
-        imageUrl: images[0] || data.imageUrl || '',
-        featured: Boolean(data.featured),
-        createdAt: serverTimestamp()
-      }
-    );
+    await addDoc(collection(db, ACHIEVEMENTS_COLLECTION), {
+      title: data.title,
+      organization: data.organization || '',
+      year: data.year || '',
+      category: data.category || 'Other',
+      description: data.description || '',
+      tags: Array.isArray(data.tags)
+        ? data.tags
+        : (data.tags || '').split(',').map(t => t.trim()).filter(Boolean),
+      images,
+      imageUrl: images[0] || data.imageUrl || '',
+      featured: Boolean(data.featured),
+      createdAt: serverTimestamp()
+    });
 
     return { success: true };
   } catch (error) {
-    return {
-      success: false,
-      error: error.message
-    };
+    return { success: false, error: error.message };
   }
 }
 
@@ -338,6 +324,77 @@ export async function deleteAchievement(id) {
     return { success: true };
   } catch (error) {
     console.error('Error deleting achievement:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Get all skills
+ */
+export async function getSkills() {
+  try {
+    const colRef = collection(db, 'skills');
+    let querySnapshot;
+    try {
+      const q = query(colRef, orderBy('createdAt', 'desc'));
+      querySnapshot = await getDocs(q);
+    } catch (orderErr) {
+      querySnapshot = await getDocs(colRef);
+    }
+
+    const skills = [];
+    querySnapshot.forEach((docSnap) => {
+      skills.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    return { success: true, skills };
+  } catch (error) {
+    console.error('Error fetching skills:', error);
+    return { success: false, error: error.message, skills: [] };
+  }
+}
+
+/**
+ * Add a new skill
+ */
+export async function addSkill(skillData) {
+  try {
+    const docRef = await addDoc(collection(db, 'skills'), {
+      ...skillData,
+      createdAt: serverTimestamp()
+    });
+    return { success: true, id: docRef.id };
+  } catch (error) {
+    console.error('Error adding skill:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Update an existing skill
+ */
+export async function updateSkill(id, skillData) {
+  try {
+    const docRef = doc(db, 'skills', id);
+    await updateDoc(docRef, {
+      ...skillData,
+      updatedAt: serverTimestamp()
+    });
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating skill:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Delete a skill
+ */
+export async function deleteSkill(id) {
+  try {
+    await deleteDoc(doc(db, 'skills', id));
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting skill:', error);
     return { success: false, error: error.message };
   }
 }
