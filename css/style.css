@@ -1925,3 +1925,178 @@ button {
   padding: 0.3rem 0.9rem;
   border-radius: var(--radius-pill);
 }
+
+/* ==========================================================================
+   Site-wide network background (js/bg-network.js)
+   ========================================================================== */
+#bg-network {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Alternate sections: translucent so the background shows through */
+.section-alt {
+  background-color: color-mix(in srgb, var(--bg-secondary) 60%, transparent);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* ==========================================================================
+   glass.css - Glassmorphism layer on top of the night-sky background
+   Load AFTER style.css and responsive.css:
+     <link rel="stylesheet" href="css/glass.css" />
+   Tweak the look from the tokens below; nothing else needs to change.
+   ========================================================================== */
+
+:root {
+  --glass-bg:        rgba(255, 255, 255, 0.55);   /* main cards */
+  --glass-bg-hover:  rgba(255, 255, 255, 0.72);
+  --glass-bg-soft:   rgba(255, 255, 255, 0.35);   /* small chips, buttons, inputs */
+  --glass-bg-strong: rgba(255, 255, 255, 0.85);   /* panels with lots of text */
+  --glass-nav:       rgba(251, 251, 253, 0.60);   /* navbar + footer */
+  --glass-border:    rgba(15, 23, 42, 0.08);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --glass-shadow:    0 8px 32px rgba(15, 23, 42, 0.08);
+  --glass-blur:      blur(16px) saturate(150%);
+}
+
+[data-theme="dark"] {
+  --glass-bg:        rgba(255, 255, 255, 0.06);
+  --glass-bg-hover:  rgba(255, 255, 255, 0.10);
+  --glass-bg-soft:   rgba(255, 255, 255, 0.04);
+  --glass-bg-strong: rgba(15, 23, 42, 0.78);
+  --glass-nav:       rgba(8, 12, 20, 0.55);
+  --glass-border:    rgba(255, 255, 255, 0.10);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --glass-shadow:    0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+/* ---- Main glass cards (these get the real blur) ------------------------- */
+.about-card,
+.contact-info-card,
+.contact-form-card,
+.project-card,
+.timeline-content,
+.hero-stat-item,
+.hero-badge {
+  background-color: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
+}
+
+.project-card:hover,
+.hero-stat-item:hover {
+  background-color: var(--glass-bg-hover);
+  border-color: color-mix(in srgb, var(--accent-primary) 45%, transparent);
+}
+
+/* ---- Strong glass (fixed UI + text-heavy bits) -------------------------- */
+.toast,
+.scroll-top-btn {
+  background-color: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+
+/* Detail overlay already blurs the page itself, so the panel only needs a tint
+   (a nested backdrop-filter would not see the sky anyway). */
+.detail-panel {
+  background-color: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
+}
+
+/* ---- Soft glass (small elements, no blur = cheap) ----------------------- */
+.stat-item,
+.tech-badge,
+.project-tag,
+.timeline-duration,
+.hero-status,
+.btn-secondary,
+.theme-toggle-btn,
+.mobile-menu-btn,
+.social-link,
+.nav-admin-link,
+.detail-gallery-item {
+  background-color: var(--glass-bg-soft);
+  border-color: var(--glass-border);
+}
+
+.tech-badge:hover,
+.btn-secondary:hover,
+.theme-toggle-btn:hover {
+  background-color: var(--glass-bg-hover);
+}
+
+.form-input,
+.form-textarea {
+  background-color: var(--glass-bg-soft);
+  border-color: var(--glass-border);
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  background-color: var(--glass-bg);
+  border-color: var(--accent-primary);
+}
+
+/* ---- Sections: let the sky show through --------------------------------- */
+.section-alt {
+  background-color: color-mix(in srgb, var(--bg-secondary) 12%, transparent);
+  border-color: var(--glass-border);
+}
+
+/* ---- Navbar -------------------------------------------------------------
+   The blur lives on a pseudo-element, NOT on .navbar itself. A backdrop-filter
+   on .navbar would break the position:fixed mobile drawer inside it. */
+.navbar {
+  background-color: transparent;
+  border-bottom-color: var(--glass-border);
+}
+
+.navbar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--glass-nav);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+  pointer-events: none;
+}
+
+/* ---- Footer ------------------------------------------------------------- */
+.footer {
+  background-color: var(--glass-nav);
+  border-top-color: var(--glass-border);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+}
+
+/* ---- Mobile ------------------------------------------------------------- */
+@media (max-width: 768px) {
+  :root { --glass-blur: blur(10px) saturate(140%); }   /* lighter on phones: the sky repaints every frame */
+
+  .nav-links {
+    background-color: var(--glass-bg-strong);
+    border-bottom-color: var(--glass-border);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+  }
+}
+
+/* ---- Fallbacks ---------------------------------------------------------- */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root                { --glass-bg: rgba(255, 255, 255, 0.92); --glass-nav: rgba(251, 251, 253, 0.95); }
+  [data-theme="dark"]  { --glass-bg: rgba(15, 23, 42, 0.92);    --glass-nav: rgba(8, 12, 20, 0.95); }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root                { --glass-bg: rgba(255, 255, 255, 0.95); --glass-nav: rgba(251, 251, 253, 0.98); }
+  [data-theme="dark"]  { --glass-bg: rgba(15, 23, 42, 0.95);    --glass-nav: rgba(8, 12, 20, 0.98); }
+}

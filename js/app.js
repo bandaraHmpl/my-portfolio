@@ -1,12 +1,14 @@
 // js/app.js
 import { initTheme } from './theme.js';
 import { initNavigation } from './navigation.js';
+import { initNetworkBackground } from './bg-network.js';
 import { initTypingEffect, initScrollToTop, initScrollReveal } from './animations.js';
 import { getProjects, saveContactMessage, getAchievements, getSkills, subscribeToSkills, getProfileSettings } from './firestore.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Initialize Core UI Modules
   initTheme();
+  initNetworkBackground();
   initNavigation();
   initScrollToTop();
 
