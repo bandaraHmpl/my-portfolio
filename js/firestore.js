@@ -10,7 +10,8 @@ import {
   deleteDoc,
   query,
   orderBy,
-  serverTimestamp
+  serverTimestamp,
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { db } from './firebase-config.js';
 
@@ -20,7 +21,7 @@ const ACHIEVEMENTS_COLLECTION = 'achievements';
 const SETTINGS_COLLECTION = 'settings';
 
 /**
- * Profile Photo abong Resume Data fetch kora
+ * Fetch profile photo and resume settings
  */
 export async function getProfileSettings() {
   try {
@@ -37,7 +38,7 @@ export async function getProfileSettings() {
 }
 
 /**
- * Profile Photo abong Resume Data save/update kora
+ * Save or update profile photo and resume data
  */
 export async function saveProfileSettings(data) {
   try {
@@ -329,7 +330,7 @@ export async function deleteAchievement(id) {
 }
 
 /**
- * Get all skills
+ * Get all skills once
  */
 export async function getSkills() {
   try {
@@ -351,6 +352,32 @@ export async function getSkills() {
     console.error('Error fetching skills:', error);
     return { success: false, error: error.message, skills: [] };
   }
+}
+
+/**
+ * Real-time subscription listener for skills collection
+ * @param {function(Object): void} callback
+ * @returns {function} Unsubscribe function
+ */
+export function subscribeToSkills(callback) {
+  const colRef = collection(db, 'skills');
+  let q;
+  try {
+    q = query(colRef, orderBy('createdAt', 'desc'));
+  } catch (orderErr) {
+    q = colRef;
+  }
+
+  return onSnapshot(q, (snapshot) => {
+    const skills = snapshot.docs.map(docSnap => ({
+      id: docSnap.id,
+      ...docSnap.data()
+    }));
+    callback({ success: true, skills });
+  }, (error) => {
+    console.error('Error listening to skills:', error);
+    callback({ success: false, skills: [], error: error.message });
+  });
 }
 
 /**

@@ -2,7 +2,7 @@
 import { initTheme } from './theme.js';
 import { initNavigation } from './navigation.js';
 import { initTypingEffect, initScrollToTop, initScrollReveal } from './animations.js';
-import { getProjects, saveContactMessage, getAchievements, getSkills, getProfileSettings } from './firestore.js';
+import { getProjects, saveContactMessage, getAchievements, getSkills, subscribeToSkills, getProfileSettings } from './firestore.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Initialize Core UI Modules
@@ -13,8 +13,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load Profile Photo & Resume Link dynamically
   await loadAndRenderProfileAndResume();
 
-  // Dynamic Skills Load & Render from Firestore
-  await loadAndRenderSkills();
+  // Subscribe to real-time skill updates from Firestore
+  loadAndRenderSkills();
 
   // Hero Dynamic Stats Update (Projects, Years in Edu, Technologies)
   await updateHeroDynamicStats();
@@ -24,9 +24,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (typedSpan) {
     initTypingEffect(typedSpan, [
       'Full-Stack Developer',
-      'UI/UX Designer',
-      'Open Source Contributor',
-      'Cloud Architecture Enthusiast'
+      'Machine Learning Practitioner',
+      'Software Engineer'
     ]);
   }
 
@@ -66,60 +65,52 @@ async function loadAndRenderProfileAndResume() {
 }
 
 /**
- * Dynamically loads and renders skills grouped by category from Firestore
+ * Listens to real-time skills updates from Firestore and renders UI
  */
-async function loadAndRenderSkills() {
-  const container = document.querySelector('.skills-wrapper');
-  if (!container) return;
+function loadAndRenderSkills() {
+  const wrapper = document.querySelector('.skills-wrapper');
+  if (!wrapper) return;
 
-  const res = await getSkills();
-  if (!res.success || !res.skills || res.skills.length === 0) return;
+  subscribeToSkills((res) => {
+    if (!res.success || !res.skills || res.skills.length === 0) {
+      wrapper.innerHTML = '<p style="text-align:center; color: var(--text-muted); grid-column: 1 / -1;">No skills available.</p>';
+      return;
+    }
 
-  const categories = ['Frontend', 'Backend', 'Database', 'Tools & Development', 'Version Control'];
-  const grouped = {};
-  categories.forEach(cat => grouped[cat] = []);
+    // Group skills by category
+    const categories = {};
+    res.skills.forEach(skill => {
+      const cat = skill.category || 'Other';
+      if (!categories[cat]) categories[cat] = [];
+      categories[cat].push(skill);
+    });
 
-  res.skills.forEach(skill => {
-    const cat = skill.category || 'Tools & Development';
-    if (!grouped[cat]) grouped[cat] = [];
-    grouped[cat].push(skill);
-  });
+    const categoryIcons = {
+      'Frontend': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+      'Backend': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>',
+      'AI & Machine Learning': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>',
+      'Database': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>',
+      'Tools & Development': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+      'Version Control': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>'
+    };
 
-  const categoryIcons = {
-    'Frontend': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
-    'Backend': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>`,
-    'Database': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>`,
-    'Tools & Development': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,
-    'Version Control': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>`
-  };
-
-  let html = '';
-  Object.keys(grouped).forEach(cat => {
-    if (grouped[cat].length === 0) return;
-
-    const badges = grouped[cat].map(s => `
-      <div class="tech-badge">
-        ${s.iconClass ? `<i class="${escapeHtml(s.iconClass)} tech-icon"></i>` : '<i class="fa-solid fa-code tech-icon"></i>'}
-        <span>${escapeHtml(s.name)}</span>
-      </div>
-    `).join('');
-
-    html += `
+    wrapper.innerHTML = Object.keys(categories).map(cat => `
       <div class="skill-category-group">
         <h3 class="skill-category-title">
-          ${categoryIcons[cat] || categoryIcons['Tools & Development']}
+          ${categoryIcons[cat] || ''}
           ${escapeHtml(cat)}
         </h3>
         <div class="skills-badges-list">
-          ${badges}
+          ${categories[cat].map(s => `
+            <div class="tech-badge">
+              ${s.iconClass ? `<i class="${escapeHtml(s.iconClass)} tech-icon"></i>` : ''}
+              <span>${escapeHtml(s.name)}</span>
+            </div>
+          `).join('')}
         </div>
       </div>
-    `;
+    `).join('');
   });
-
-  if (html) {
-    container.innerHTML = html;
-  }
 }
 
 /**
@@ -144,14 +135,13 @@ async function updateHeroDynamicStats() {
     projectsEl.textContent = `${projectsCount}+`;
   }
 
+  // Count total technologies dynamically from Firestore skills collection or fallback to badges
   const skillsRes = await getSkills();
-  const skillsCount = (skillsRes && skillsRes.success && Array.isArray(skillsRes.skills)) ? skillsRes.skills.length : 0;
+  const skillsCount = (skillsRes.skills || []).length;
   const staticBadgesCount = document.querySelectorAll('.tech-badge').length;
-  const totalTechs = skillsCount > 0 ? skillsCount : staticBadgesCount;
-
   const techsEl = document.getElementById('hero-stat-techs');
   if (techsEl) {
-    techsEl.textContent = `${totalTechs}+`;
+    techsEl.textContent = `${skillsCount > 0 ? skillsCount : (staticBadgesCount > 0 ? staticBadgesCount : 26)}+`;
   }
 }
 
@@ -336,7 +326,7 @@ export function showToast(message, type = 'success') {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       ${type === 'success'
         ? '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>'
-        : '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'}
+        : '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'}
     </svg>
     <span>${escapeHtml(message)}</span>
   `;
