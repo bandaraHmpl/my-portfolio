@@ -14,6 +14,7 @@ import {
   deleteAchievement,
   updateAchievement,
   getSkills,
+  subscribeToSkills,
   addSkill,
   updateSkill,
   deleteSkill,
@@ -67,16 +68,18 @@ async function initDashboard() {
   await Promise.all([
     refreshProjectsTable(),
     refreshAchievementsTable(),
-    refreshSkillsTable(),
     refreshMessagesTable()
   ]);
+
+  // Subscribe to real-time skill updates
+  refreshSkillsTable();
 
   updateSummaryStats();
   setupSearchFilters();
   setupAdminSidebarNavigation();
   setupProfileResumeUploads();
 
-  // Setup Add Buttons
+  // Setup Add & Reseed Buttons
   document.getElementById('add-project-btn')?.addEventListener('click', () => openProjectModal());
   document.getElementById('add-achievement-btn')?.addEventListener('click', () => openAchievementModal());
   document.getElementById('add-skill-btn')?.addEventListener('click', () => openSkillModal());
@@ -413,16 +416,17 @@ function closeAchievementModal() {
 
 // ==================== SKILLS MANAGEMENT ====================
 
-async function refreshSkillsTable() {
-  const res = await getSkills();
-  if (res.success) {
-    cachedSkills = res.skills || [];
-  } else {
-    cachedSkills = [];
-    showAdminToast('Failed to load skills: ' + res.error, 'error');
-  }
-  renderSkills(cachedSkills);
-  updateSummaryStats();
+function refreshSkillsTable() {
+  subscribeToSkills((res) => {
+    if (res.success) {
+      cachedSkills = res.skills || [];
+    } else {
+      cachedSkills = [];
+      showAdminToast('Failed to load skills: ' + res.error, 'error');
+    }
+    renderSkills(cachedSkills);
+    updateSummaryStats();
+  });
 }
 
 function renderSkills(skills) {
@@ -430,15 +434,7 @@ function renderSkills(skills) {
   if (!grid) return;
 
   if (skills.length === 0) {
-    grid.innerHTML = `
-      <div style="text-align:center; padding: 2rem; grid-column: 1 / -1;">
-        <p style="margin-bottom: 1rem; color: var(--text-muted);">No custom skills in database.</p>
-        <button id="seed-skills-btn" class="btn btn-primary" style="font-size: 0.8125rem;">
-          Seed Default Portfolio Skills
-        </button>
-      </div>
-    `;
-    document.getElementById('seed-skills-btn')?.addEventListener('click', handleSeedSkills);
+    grid.innerHTML = `<p class="empty-state-text">No custom skills in database.</p>`;
     return;
   }
 
@@ -481,50 +477,12 @@ function renderSkills(skills) {
         const res = await deleteSkill(id);
         if (res.success) {
           showAdminToast('Skill deleted.', 'success');
-          refreshSkillsTable();
         } else {
           showAdminToast('Failed to delete skill: ' + res.error, 'error');
         }
       }
     });
   });
-}
-
-async function handleSeedSkills() {
-  const defaultSkills = [
-    { name: 'JavaScript', category: 'Frontend', iconClass: 'devicon-javascript-plain colored' },
-    { name: 'HTML5', category: 'Frontend', iconClass: 'devicon-html5-plain colored' },
-    { name: 'CSS3', category: 'Frontend', iconClass: 'devicon-css3-plain colored' },
-    { name: 'React', category: 'Frontend', iconClass: 'devicon-react-original colored' },
-    { name: 'Tailwind CSS', category: 'Frontend', iconClass: 'devicon-tailwindcss-original colored' },
-    { name: 'Java', category: 'Backend', iconClass: 'devicon-java-plain colored' },
-    { name: 'Spring Boot', category: 'Backend', iconClass: 'devicon-spring-original colored' },
-    { name: 'PHP', category: 'Backend', iconClass: 'devicon-php-plain colored' },
-    { name: 'REST APIs', category: 'Backend', iconClass: 'fa-solid fa-link' },
-    { name: 'Python', category: 'Backend', iconClass: 'devicon-python-plain colored' },
-    { name: 'FastAPI', category: 'Backend', iconClass: 'devicon-fastapi-plain colored' },
-    { name: 'MySQL', category: 'Database', iconClass: 'devicon-mysql-plain colored' },
-    { name: 'Firebase Firestore', category: 'Database', iconClass: 'devicon-firebase-plain colored' },
-    { name: 'VS Code', category: 'Tools & Development', iconClass: 'devicon-vscode-plain colored' },
-    { name: 'IntelliJ IDEA', category: 'Tools & Development', iconClass: 'devicon-intellij-plain colored' },
-    { name: 'Ubuntu', category: 'Tools & Development', iconClass: 'devicon-ubuntu-plain colored' },
-    { name: 'Postman', category: 'Tools & Development', iconClass: 'devicon-postman-plain colored' },
-    { name: 'Git', category: 'Version Control', iconClass: 'devicon-git-plain colored' },
-    { name: 'GitHub', category: 'Version Control', iconClass: 'devicon-github-original' }
-  ];
-
-  const btn = document.getElementById('seed-skills-btn');
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = 'Seeding skills...';
-  }
-
-  for (const s of defaultSkills) {
-    await addSkill(s);
-  }
-
-  showAdminToast('Default skills seeded successfully!', 'success');
-  await refreshSkillsTable();
 }
 
 async function handleSkillSubmit(e) {
@@ -539,7 +497,6 @@ async function handleSkillSubmit(e) {
 
   if (res.success) {
     closeSkillModal();
-    refreshSkillsTable();
     showAdminToast(currentSkillEditingId ? 'Skill updated!' : 'Skill added!', 'success');
   } else {
     showAdminToast('Error saving skill: ' + res.error, 'error');

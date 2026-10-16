@@ -166,10 +166,12 @@
     <section id="skills-section" class="admin-card">
       <div class="admin-card-header">
         <h2 class="admin-card-title">Technical Skills & Stack</h2>
-        <button class="btn btn-primary" id="add-skill-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add Skill
-        </button>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <button class="btn btn-primary" id="add-skill-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Skill
+          </button>
+        </div>
       </div>
 
       <div class="cards-grid" id="skills-table-body">
@@ -376,6 +378,7 @@
         <select id="skill-category" class="form-input" required>
           <option value="Frontend">Frontend</option>
           <option value="Backend">Backend</option>
+          <option value="AI & Machine Learning">AI & Machine Learning</option>
           <option value="Database">Database</option>
           <option value="Tools & Development">Tools & Development</option>
           <option value="Version Control">Version Control</option>
