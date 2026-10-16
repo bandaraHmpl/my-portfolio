@@ -537,6 +537,33 @@ async function refreshMessagesTable() {
   }
 }
 
+// Opens a reply to the sender:
+//  - Desktop: Gmail compose in a new tab (To, Subject, Body filled)
+//  - Mobile : mailto: link -> phone's default mail app (Gmail app if it is the default)
+function openReplyToMessage(msg) {
+  const to = (msg.email || '').trim();
+  const subject = `Re: ${msg.subject && msg.subject.trim() ? msg.subject.trim() : 'Your message'}`;
+
+  // Quote the original message (truncated to keep the URL short enough)
+  const original = (msg.message || '').slice(0, 500);
+  const quoted = original.split('\n').map(line => `> ${line}`).join('\n');
+  const body = `Hi ${msg.name || ''},\n\n\n\n-----\nOn your message:\n${quoted}`;
+
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    window.location.href =
+      `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  } else {
+    const gmailUrl =
+      `https://mail.google.com/mail/?view=cm&fs=1` +
+      `&to=${encodeURIComponent(to)}` +
+      `&su=${encodeURIComponent(subject)}` +
+      `&body=${encodeURIComponent(body)}`;
+    window.open(gmailUrl, '_blank', 'noopener,noreferrer');
+  }
+}
+
 function renderMessages(messages) {
   const grid = document.getElementById('messages-table-body');
   if (!grid) return;
@@ -579,11 +606,8 @@ function renderMessages(messages) {
       const msg = cachedMessages.find(m => m.id === id);
       if (!msg) return;
 
-      const subject = encodeURIComponent(`Reply to: ${msg.subject || 'Inquiry'}`);
-      const body = encodeURIComponent(`Hi ${msg.name || ''},\n\n`);
-      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(msg.email)}&su=${subject}&body=${body}`;
-
-      window.open(gmailUrl, '_blank');
+      // Open the mail window first (inside the click event) so browsers don't block it
+      openReplyToMessage(msg);
 
       if (!msg.replied) {
         await markMessageReplied(id, true);
@@ -713,13 +737,13 @@ function setupProfileResumeUploads() {
       if (res.profile.photoUrl) {
         const displayDiv = document.getElementById('profile-url-display');
         if (displayDiv) {
-          displayDiv.innerHTML = `<strong>Current Photo:</strong> <a href="${res.profile.photoUrl}" target="_blank" style="color: #3b82f6;">${res.profile.photoUrl}</a>`;
+          displayDiv.innerHTML = `<strong>Current Photo:</strong> <a href="${res.profile.photoUrl}" target="_blank" rel="noopener noreferrer" style="color: #3b82f6;">${res.profile.photoUrl}</a>`;
         }
       }
       if (res.profile.resumeUrl) {
         const displayDiv = document.getElementById('resume-url-display');
         if (displayDiv) {
-          displayDiv.innerHTML = `<strong>Current Resume:</strong> <a href="${res.profile.resumeUrl}" target="_blank" style="color: #3b82f6;">${res.profile.resumeUrl}</a>`;
+          displayDiv.innerHTML = `<strong>Current Resume:</strong> <a href="${res.profile.resumeUrl}" target="_blank" rel="noopener noreferrer" style="color: #3b82f6;">${res.profile.resumeUrl}</a>`;
         }
       }
     }
@@ -742,7 +766,7 @@ function setupProfileResumeUploads() {
       if (saveRes.success) {
         showAdminToast('Profile Photo uploaded & saved to database!', 'success');
         if (displayDiv) {
-          displayDiv.innerHTML = `<strong>Saved Link:</strong> <a href="${url}" target="_blank" style="color: #3b82f6;">${url}</a>`;
+          displayDiv.innerHTML = `<strong>Saved Link:</strong> <a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #3b82f6;">${url}</a>`;
         }
       } else {
         showAdminToast('Failed to save to database: ' + saveRes.error, 'error');
@@ -767,7 +791,7 @@ function setupProfileResumeUploads() {
       if (saveRes.success) {
         showAdminToast('Resume uploaded & saved to database!', 'success');
         if (displayDiv) {
-          displayDiv.innerHTML = `<strong>Saved Link:</strong> <a href="${url}" target="_blank" style="color: #3b82f6;">${url}</a>`;
+          displayDiv.innerHTML = `<strong>Saved Link:</strong> <a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #3b82f6;">${url}</a>`;
         }
       } else {
         showAdminToast('Failed to save to database: ' + saveRes.error, 'error');
